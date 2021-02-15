@@ -1,0 +1,36 @@
+name: 'Find Regex'
+description: 'Finds a regex match from given sources'
+inputs:
+  regex:
+    description: "The regex to look for"
+    required: true
+  files:
+    description: "Files to check"
+    required: false
+    default: ""
+  commands:
+    description: "Commands to run and check output.  Only ran if not found in files"
+    required: false
+    default: ""
+  require-match:
+    description: "Whether to error if no match.  Outputs '' if no match and not required"
+    required: false
+    default: "true"
+  group:
+    description: "The match group to output, or 0 for the entire match"
+    required: false
+    default: "1"
+  ignore-case:
+    description: "Whether regex should ignore case"
+    required: false
+    default: "true"
+  multiline:
+    description: "Whether to use multiline regex"
+    required: false
+    default: "false"
+outputs:
+  match:
+    description: "The match or match group"
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
