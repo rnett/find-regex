@@ -30,3 +30,12 @@ Only `regex` is required, although if `files` and `commands` are both empty nowh
 ### Example
 
 To find the version of a gradle project:
+```yaml
+- name: Get version
+  id: get_version
+  uses: rnett/find-regex@v1.0
+  with:
+    regex: 'version ?(?:=|:) ?"?([\w.\-_]+)"?'
+    files: "gradle.properties,build.gradle.kts,build.gradle"
+    commands: "./gradlew properties"
+```

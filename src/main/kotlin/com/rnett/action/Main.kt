@@ -63,12 +63,15 @@ suspend fun main() {
     log.info("Regex: $regex")
 
     fun setOutput(match: MatchResult) {
-        if (group == 0) {
-            outputs["match"] = match.value
+        log.info("Found match ${match.value}")
+        val out = if (group == 0) {
+            match.value
         } else {
-            outputs["match"] = match.groupValues.getOrNull(group)
+            match.groupValues.getOrNull(group)
                 ?: fail("No match group $group, check your regex")
         }
+        outputs["match"] = out
+        log.info("Matching part: $out")
     }
 
     files.forEach {
