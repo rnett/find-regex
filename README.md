@@ -13,7 +13,8 @@ Only `regex` is required, although if `files` and `commands` are both empty nowh
 * `regex` - the regex to look for. Can use any syntax supported by Kotlin JS.
 
 * `files` - files to check. This happens before commands are run. Comma separated list, will be un-quoted un-escaped
-  unless enclosed in `'`.
+  unless enclosed in `'`. All items will be used in one glob, with the syntax used in `@actions/glob` being supported in
+  items (default arguments are used). Exclusions are supported since items are globbed together.
 * `commands` - commands to check the stdout of. Comma separated list, will be un-quoted un-escaped unless enclosed
   in `'`.
 * `require-match` - whether to error if no match is found. Defaults to true. If false and no match is found,

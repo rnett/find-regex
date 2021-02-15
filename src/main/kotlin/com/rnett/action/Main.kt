@@ -5,6 +5,7 @@ import com.rnett.action.core.inputs
 import com.rnett.action.core.log
 import com.rnett.action.core.outputs
 import com.rnett.action.exec.exec
+import com.rnett.action.glob.glob
 
 /**
  * ' -> literal
@@ -35,11 +36,12 @@ suspend fun main() {
         .filter(String::isNotBlank)
         .map(::unQuote)
 
-    val files = inputs.getRequired("commands")
-        .split(",")
-        .filter(String::isNotBlank)
-        .map(::unQuote)
-        .map(::Path)
+    val files = glob(
+        inputs.getRequired("files")
+            .split(",")
+            .filter(String::isNotBlank)
+            .map(::unQuote)
+    )
 
     val requireMatch = inputs.getRequired("require-match").toBoolean()
 
@@ -58,6 +60,8 @@ suspend fun main() {
 
     val regex = Regex(regexText, options)
 
+    log.info("Regex: $regex")
+
     fun setOutput(match: MatchResult) {
         if (group == 0) {
             outputs["match"] = match.value
@@ -70,9 +74,13 @@ suspend fun main() {
     files.forEach {
         log.info("Trying file $it")
         if (it.exists) {
-            regex.find(it.read())?.let {
-                setOutput(it)
-                return
+            if (it.isFile) {
+                regex.find(it.read())?.let {
+                    setOutput(it)
+                    return
+                }
+            } else {
+                log.info("File is directory (or otherwise not a file)")
             }
         } else {
             log.info("File does not exist")
