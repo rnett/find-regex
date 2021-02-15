@@ -31,25 +31,25 @@ fun unQuote(command: String): String {
 suspend fun main() {
     val regexText by inputs("regex")
 
-    val commands = inputs.getRequired("commands")
+    val commands = inputs["commands"]
         .split(",")
         .filter(String::isNotBlank)
         .map(::unQuote)
 
     val files = glob(
-        inputs.getRequired("files")
+        inputs["files"]
             .split(",")
             .filter(String::isNotBlank)
             .map(::unQuote)
     )
 
-    val requireMatch = inputs.getRequired("require-match").toBoolean()
+    val requireMatch = inputs["require-match"].toBoolean()
 
-    val group = inputs.getRequired("group").toIntOrNull() ?: 0
+    val group = inputs["group"].toIntOrNull() ?: 0
 
-    val ignoreCase = inputs.getRequired("ignore-case").toBoolean()
+    val ignoreCase = inputs["ignore-case"].toBoolean()
 
-    val multiline = inputs.getRequired("multiline").toBoolean()
+    val multiline = inputs["multiline"].toBoolean()
 
     val options = buildSet {
         if (ignoreCase)
@@ -62,6 +62,8 @@ suspend fun main() {
 
     log.info("Regex: $regex")
 
+    var matchOutput by outputs("match")
+
     fun setOutput(match: MatchResult) {
         log.info("Found match ${match.value}")
         val out = if (group == 0) {
@@ -70,7 +72,7 @@ suspend fun main() {
             match.groupValues.getOrNull(group)
                 ?: fail("No match group $group, check your regex")
         }
-        outputs["match"] = out
+        matchOutput = out
         log.info("Matching part: $out")
     }
 
@@ -107,6 +109,6 @@ suspend fun main() {
         fail("No match found")
     else {
         log.info("No match found")
-        outputs["match"] = ""
+        matchOutput = ""
     }
 }
