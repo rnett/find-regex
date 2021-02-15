@@ -12,17 +12,19 @@ Only `regex` is required, although if `files` and `commands` are both empty nowh
 
 * `regex` - the regex to look for. Can use any syntax supported by Kotlin JS.
 
-* `files` - files to check. This happens before commands are run. Comma separated list, will be un-quoted un-escaped unless
-  enclosed in `'`.
-* `commands` - commands to check the stdout of. Comma separated list, will be un-quoted un-escaped unless
-  enclosed in `'`.
-* `require-match` - whether to error if no match is found.  Defaults to true.
-* `group` - the capture group to use as output.  Can be 0 to use the entire match.  Default is `1`.
-* `ignore-case` - whether the regex should ignore case.  Defaults to true.
-* `multiline` - whether the regex should be multi line.  Defaults to false.
+* `files` - files to check. This happens before commands are run. Comma separated list, will be un-quoted un-escaped
+  unless enclosed in `'`.
+* `commands` - commands to check the stdout of. Comma separated list, will be un-quoted un-escaped unless enclosed
+  in `'`.
+* `require-match` - whether to error if no match is found. Defaults to true. If false and no match is found,
+  output `match` will be the empty string.
+* `group` - the capture group to use as output. Can be 0 to use the entire match. Default is `1`.
+* `ignore-case` - whether the regex should ignore case. Defaults to true.
+* `multiline` - whether the regex should be multi line. Defaults to false.
 
 #### Outputs
- * `match` - the match or match group, according to `group`.
+
+* `match` - the match or match group, according to `group`.
 
 ### Example
 

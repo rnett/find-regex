@@ -5,7 +5,6 @@ import com.rnett.action.core.inputs
 import com.rnett.action.core.log
 import com.rnett.action.core.outputs
 import com.rnett.action.exec.exec
-import querystring.unescape
 
 /**
  * ' -> literal
@@ -16,13 +15,14 @@ fun unQuote(command: String): String {
     if (command.startsWith('\'') && command.endsWith('\'')) {
         return command
     } else {
-        return unescape(command.trim('"'))
+        return command.trim('"')
             .replace("\\\\", "\\")
             .replace("\\n", "\n")
             .replace("\\r", "\r")
             .replace("\\t", "\t")
             .replace("\\'", "\'")
             .replace("\\\"", "\"")
+            .replace(Regex("%(\\d+)")) { it.groupValues[1].toInt().toChar().toString() }
     }
 }
 
@@ -69,24 +69,30 @@ suspend fun main() {
 
     files.forEach {
         log.info("Trying file $it")
-        regex.find(it.read())?.let {
-            setOutput(it)
-            return
+        if (it.exists) {
+            regex.find(it.read())?.let {
+                setOutput(it)
+                return
+            }
+        } else {
+            log.info("File does not exist")
         }
     }
 
     commands.forEach {
         log.info("Trying command $it")
-        val output = exec.execCommandAndCapture(it, ignoreReturnCode = true).run { if(returnCode == 0) stdout else null }
-        if(output != null) {
-            regex.find(output)?.let {
+        val output = exec.execCommandAndCapture(it, ignoreReturnCode = true)
+        if (output.returnCode != 0) {
+            log.info("Command failed with error code ${output.returnCode}")
+        } else {
+            regex.find(output.stdout)?.let {
                 setOutput(it)
                 return
             }
         }
     }
 
-    if(requireMatch)
+    if (requireMatch)
         fail("No match found")
     else {
         log.info("No match found")
