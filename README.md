@@ -4,7 +4,7 @@ A GitHub action to find a regex in files or the output of commands.
 
 Files will always be checked first, all commands are ran in the current working directory.
 
-The first match is returned.
+The first match is returned eagerly.
 
 #### Inputs
 
@@ -33,7 +33,7 @@ To find the version of a gradle project:
 ```yaml
 - name: Get version
   id: get_version
-  uses: rnett/find-regex@v1.0
+  uses: rnett/find-regex@v1.1
   with:
     regex: 'version ?(?:=|:) ?"?([\w.\-_]+)"?'
     files: "gradle.properties,build.gradle.kts,build.gradle"
