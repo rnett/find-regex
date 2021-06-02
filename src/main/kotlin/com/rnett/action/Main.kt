@@ -1,9 +1,6 @@
 package com.rnett.action
 
-import com.rnett.action.core.fail
-import com.rnett.action.core.inputs
-import com.rnett.action.core.log
-import com.rnett.action.core.outputs
+import com.rnett.action.core.*
 import com.rnett.action.exec.exec
 import com.rnett.action.glob.glob
 
@@ -28,7 +25,7 @@ fun unQuote(command: String): String {
 }
 
 @OptIn(ExperimentalStdlibApi::class)
-suspend fun main() {
+suspend fun main() = runOrFail{
     val regexText by inputs("regex")
 
     val commands = inputs["commands"]
