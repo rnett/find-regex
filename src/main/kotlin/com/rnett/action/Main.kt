@@ -1,8 +1,15 @@
 package com.rnett.action
 
 import com.rnett.action.core.*
+import com.rnett.action.delegates.ifNull
+import com.rnett.action.delegates.isTrue
+import com.rnett.action.delegates.map
+import com.rnett.action.delegates.toBoolean
+import com.rnett.action.delegates.toInt
 import com.rnett.action.exec.exec
 import com.rnett.action.glob.glob
+import com.rnett.action.glob.globFlow
+import kotlinx.coroutines.flow.collect
 
 /**
  * ' -> literal
@@ -25,28 +32,28 @@ fun unQuote(command: String): String {
 }
 
 @OptIn(ExperimentalStdlibApi::class)
-suspend fun main() = runOrFail{
+suspend fun main() = runAction{
     val regexText by inputs("regex")
 
-    val commands = inputs["commands"]
-        .split(",")
-        .filter(String::isNotBlank)
-        .map(::unQuote)
-
-    val files = glob(
-        inputs["files"]
-            .split(",")
+    val commands by inputs.map {
+        it.split(",")
             .filter(String::isNotBlank)
             .map(::unQuote)
-    )
+    }
 
-    val requireMatch = inputs["require-match"].toBoolean()
+    val files by inputs.map {
+        it.split(",")
+            .filter(String::isNotBlank)
+            .map(::unQuote)
+    }
 
-    val group = inputs["group"].toIntOrNull() ?: 0
+    val requireMatch by inputs.isTrue()
 
-    val ignoreCase = inputs["ignore-case"].toBoolean()
+    val group by inputs.toInt().ifNull { 0 }
 
-    val multiline = inputs["multiline"].toBoolean()
+    val ignoreCase by inputs.isTrue()
+
+    val multiline by inputs.isTrue()
 
     val options = buildSet {
         if (ignoreCase)
@@ -57,12 +64,13 @@ suspend fun main() = runOrFail{
 
     val regex = Regex(regexText, options)
 
-    log.info("Regex: $regex")
+    logger.info("Regex: $regex")
 
     var matchOutput by outputs("match")
+    var foundOutput = false
 
     fun setOutput(match: MatchResult) {
-        log.info("Found match ${match.value}")
+        logger.info("Found match ${match.value}")
         val out = if (group == 0) {
             match.value
         } else {
@@ -70,34 +78,40 @@ suspend fun main() = runOrFail{
                 ?: fail("No match group $group, check your regex")
         }
         matchOutput = out
-        log.info("Matching part: $out")
+        foundOutput = true
+        logger.info("Matching part: $out")
     }
 
-    files.forEach {
-        log.info("Trying file $it")
+    globFlow(files).collect {
+        if(foundOutput)
+            return@collect
+        logger.info("Trying file $it")
         if (it.exists) {
             if (it.isFile) {
-                regex.find(it.read())?.let {
+                regex.find(it.readText())?.let {
                     setOutput(it)
-                    return
+                    return@collect
                 }
             } else {
-                log.info("File is directory (or otherwise not a file)")
+                logger.info("File is directory (or otherwise not a file)")
             }
         } else {
-            log.info("File does not exist")
+            logger.info("File does not exist")
         }
     }
 
+    if(foundOutput)
+        return@runAction
+
     commands.forEach {
-        log.info("Trying command $it")
+        logger.info("Trying command $it")
         val output = exec.execCommandAndCapture(it, ignoreReturnCode = true)
         if (output.returnCode != 0) {
-            log.info("Command failed with error code ${output.returnCode}")
+            logger.info("Command failed with error code ${output.returnCode}")
         } else {
             regex.find(output.stdout)?.let {
                 setOutput(it)
-                return
+                return@runAction
             }
         }
     }
@@ -105,7 +119,7 @@ suspend fun main() = runOrFail{
     if (requireMatch)
         fail("No match found")
     else {
-        log.info("No match found")
+        logger.info("No match found")
         matchOutput = ""
     }
 }
